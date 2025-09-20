@@ -1,0 +1,104 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# PyCharm
+.idea/
+
+# VS Code
+.vscode/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Video Downloader Specific - Sensitive Data
+data/
+*.csv
+downloads/
+output/
+videos/
+media/
+
+# Authentication & Cookies
+*.cookies*
+*cookie*
+*.json
+auth.*
+session.*
+credentials.*
+
+# Personal Configuration Paths
+# (Protect hardcoded paths like /Users/niceday/Developer/cookie/)
+config/local/
+local_config.*
+personal_paths.*
+
+# Logs and State Files
+*.log
+logs/
+state.json
+failures.csv
+download_history.*
+archive_state.*
+
+# Downloaded Content
+*.mp4
+*.mkv
+*.avi
+*.mov
+*.webm
+*.m4v
+*.flv
+*.wmv
+
+# Temporary Files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Database Files
+*.sqlite*
+*.db
+*.mdb
+
+# Environment Variables
+.env*
+*.env.*
+
+# Backup Files
+*.bak
+*.backup
+backup/
+backups/
