@@ -4,7 +4,7 @@
 """Dispatch video URLs to Downie 4 using extractor strategies.
 
 Usage:
-  python3 downie_dispatch.py [--cookie COOKIE] [--cookie-file PATH] <url> [more_urls...]
+  python3 downie_dispatch.py [--cookie COOKIE] [--cookie-file PATH] [--cookie-json PATH] <url> [more_urls...]
 
 The script inspects each URL's domain and selects a strategy:
   * YouTube domains: forward the original URL to Downie 4 directly.
@@ -41,6 +41,11 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
         "--cookie-file",
         dest="cookie_file",
         help="Cookie file path for X/Twitter extractor (Netscape or KEY=VALUE).",
+    )
+    parser.add_argument(
+        "--cookie-json",
+        dest="cookie_json",
+        help="Cookie JSON file exported by rss-inbox (list of {name,value} objects).",
     )
     return parser.parse_args(argv)
 
@@ -83,7 +88,11 @@ def send_to_downie(urls: Iterable[str]) -> None:
 
 
 def resolve_twitter_cookies(args: argparse.Namespace) -> Optional[Dict[str, str]]:
-    temp_args = argparse.Namespace(cookie=args.cookie, cookie_file=args.cookie_file)
+    temp_args = argparse.Namespace(
+        cookie=args.cookie,
+        cookie_file=args.cookie_file,
+        cookie_json=getattr(args, "cookie_json", None),
+    )
     try:
         return twitter_video.resolve_cookies(temp_args)
     except Exception as exc:
