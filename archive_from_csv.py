@@ -10,19 +10,18 @@ from typing import Dict, List, Optional
 import downie_dispatch
 
 from dry_run_from_csv import (
+    DEFAULT_COOKIE_FILE,
     DEFAULT_DATA_DIR,
     DEFAULT_FAILURES_FILE,
     DEFAULT_FEED_URL,
     DEFAULT_STATE_FILE,
+    append_processed,
     collect_urls,
+    evaluate_urls,
     load_state,
     save_state,
-    append_processed,
     write_failures,
-    evaluate_urls,
 )
-
-DEFAULT_COOKIE_FILE = "/Users/niceday/Developer/cookie/singlefile/xcom.cookies.json"
 
 
 def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:

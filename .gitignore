@@ -44,6 +44,7 @@ venv.bak/
 
 # Video Downloader Specific - Sensitive Data
 data/
+data/**/*.json
 *.csv
 downloads/
 output/
@@ -53,7 +54,8 @@ media/
 # Authentication & Cookies
 *.cookies*
 *cookie*
-*.json
+*cookies*.json
+cookie*.json
 auth.*
 session.*
 credentials.*

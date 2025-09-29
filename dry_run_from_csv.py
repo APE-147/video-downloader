@@ -12,15 +12,56 @@ from typing import Dict, Iterable, List, Optional, Set, Tuple
 
 import downie_dispatch
 
-DEFAULT_DATA_DIR = Path(__file__).parent / "data"
+from env_utils import env_path, env_value, load_env_file
+
+
+load_env_file()
+
+DEFAULT_DATA_DIR = Path(
+    env_path("VIDEO_DOWNLOADER_DATA_DIR", Path(__file__).parent / "data")
+)
 DEFAULT_STATE_FILE = Path(
-    "/Users/niceday/Developer/Cloud/Dropbox/-Code-/Data/srv/rss_inbox/logs/state.json"
+    env_path(
+        "VIDEO_DOWNLOADER_STATE_FILE",
+        Path.home()
+        / "Developer"
+        / "Cloud"
+        / "Dropbox"
+        / "-Code-"
+        / "Data"
+        / "srv"
+        / "rss_inbox"
+        / "logs"
+        / "state.json",
+    )
 )
-DEFAULT_FEED_URL = "https://bg.raindrop.io/rss/public/36726420"
+DEFAULT_FEED_URL = env_value(
+    "VIDEO_DOWNLOADER_FEED_URL",
+    "https://example.com/your-feed",
+)
 DEFAULT_FAILURES_FILE = Path(
-    "/Users/niceday/Developer/Cloud/Dropbox/-Code-/Data/srv/rss_inbox/logs/failures.csv"
+    env_path(
+        "VIDEO_DOWNLOADER_FAILURES_FILE",
+        Path.home()
+        / "Developer"
+        / "Cloud"
+        / "Dropbox"
+        / "-Code-"
+        / "Data"
+        / "srv"
+        / "rss_inbox"
+        / "logs"
+        / "failures.csv",
+    )
 )
-DEFAULT_COOKIE_FILE = "/Users/niceday/Developer/cookie/singlefile/xcom.cookies.json"
+DEFAULT_COOKIE_FILE = env_path(
+    "VIDEO_DOWNLOADER_COOKIE_FILE",
+    Path.home()
+    / "Developer"
+    / "cookie"
+    / "singlefile"
+    / "xcom.cookies.json",
+)
 
 __all__ = [
     "DEFAULT_DATA_DIR",

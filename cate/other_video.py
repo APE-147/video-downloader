@@ -65,9 +65,9 @@ def ensure_archive_url(url: str) -> None:
         raise ArchiveExtractionError("URL path must match /archives/<id>/ pattern")
 
 
-def fetch_html(url: str) -> str:
+def fetch_html(url: str, cookies: Optional[Dict[str, str]] = None) -> str:
     try:
-        resp = requests.get(url, headers=DEFAULT_HEADERS, timeout=20)
+        resp = requests.get(url, headers=DEFAULT_HEADERS, timeout=20, cookies=cookies)
         resp.raise_for_status()
         return resp.text
     except requests.RequestException as exc:  # pragma: no cover - network guard
@@ -173,9 +173,9 @@ def resolve_video_url(config: Dict[str, object], referer: str) -> Optional[str]:
     return url
 
 
-def extract_videos(url: str) -> List[VideoResult]:
+def extract_videos(url: str, cookies: Optional[Dict[str, str]] = None) -> List[VideoResult]:
     ensure_archive_url(url)
-    html = fetch_html(url)
+    html = fetch_html(url, cookies=cookies)
     configs = parse_dplayer_configs(html)
     videos: List[VideoResult] = []
     for idx, cfg in enumerate(configs, 1):

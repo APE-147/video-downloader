@@ -4,7 +4,9 @@
 """Dispatch video URLs to Downie 4 using extractor strategies.
 
 Usage:
-  python3 downie_dispatch.py [--cookie COOKIE] [--cookie-file PATH] [--cookie-json PATH] <url> [more_urls...]
+  python3 downie_dispatch.py [--cookie COOKIE] [--cookie-file PATH] [--cookie-json PATH]
+                             [--cookie-update]
+                             <url> [more_urls...]
 
 The script inspects each URL's domain and selects a strategy:
   * YouTube domains: forward the original URL to Downie 4 directly.
@@ -13,6 +15,10 @@ The script inspects each URL's domain and selects a strategy:
 
 Resolved media URLs are then handed off to Downie 4 via ``open -g -a`` to keep the
 application in the background.
+
+When ``--cookie-update`` is supplied, the script looks up cookies for each
+domain via the ``cookie-update`` project before extraction. If cookies cannot
+be retrieved the URL is processed as usual.
 """
 
 from __future__ import annotations
@@ -24,6 +30,7 @@ from typing import Dict, Iterable, List, Optional, Set
 from urllib.parse import urlparse
 
 from cate import other_video, twitter_video
+from common.cookie_update_bridge import CookieUpdateFetcher
 
 
 DOWNIE_APP_CANDIDATES = ("Downie 4", "Downie")
@@ -46,6 +53,12 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
         "--cookie-json",
         dest="cookie_json",
         help="Cookie JSON file exported by rss-inbox (list of {name,value} objects).",
+    )
+    parser.add_argument(
+        "--cookie-update",
+        dest="use_cookie_update",
+        action="store_true",
+        help="Fetch per-domain cookies via the cookie-update project before extraction.",
     )
     return parser.parse_args(argv)
 
@@ -100,20 +113,39 @@ def resolve_twitter_cookies(args: argparse.Namespace) -> Optional[Dict[str, str]
         return None
 
 
-def extract_links(url: str, strategy: str, twitter_cookies: Optional[Dict[str, str]]) -> List[str]:
+def merge_cookie_dicts(
+    base: Optional[Dict[str, str]],
+    extra: Optional[Dict[str, str]],
+) -> Optional[Dict[str, str]]:
+    if not base and not extra:
+        return None
+    if not base:
+        return dict(extra) if extra else None
+    if not extra:
+        return dict(base)
+    merged = dict(base)
+    merged.update(extra)
+    return merged
+
+
+def extract_links(url: str, strategy: str, cookies: Optional[Dict[str, str]]) -> List[str]:
     if strategy == "youtube":
         return [url]
     if strategy == "twitter":
-        videos = twitter_video.extract_with_vxtwitter(url, cookies=twitter_cookies)
+        videos = twitter_video.extract_with_vxtwitter(url, cookies=cookies)
         return [item.url for item in videos if item.url]
-    results = other_video.extract_videos(url)
+    results = other_video.extract_videos(url, cookies=cookies)
     return [item.url for item in results if item.url]
 
 
 def main(argv: Optional[List[str]] = None) -> int:
     args = parse_args(argv)
+    cookie_fetcher: Optional[CookieUpdateFetcher] = None
+    cookie_status: Dict[str, bool] = {}
     twitter_cookies: Optional[Dict[str, str]] = None
     twitter_cookies_loaded = False
+    if getattr(args, "use_cookie_update", False):
+        cookie_fetcher = CookieUpdateFetcher()
     exit_code = 0
 
     for original_url in args.urls:
@@ -129,8 +161,30 @@ def main(argv: Optional[List[str]] = None) -> int:
             twitter_cookies = resolve_twitter_cookies(args)
             twitter_cookies_loaded = True
 
+        domain_cookies: Optional[Dict[str, str]] = None
+        if cookie_fetcher:
+            bundle = cookie_fetcher.get_bundle(original_url)
+            if bundle and bundle.requests:
+                domain_cookies = bundle.requests
+                if bundle.domain not in cookie_status:
+                    print(
+                        f"  cookie-update: loaded {len(bundle.requests)} cookies for {bundle.domain}"
+                    )
+                    cookie_status[bundle.domain] = True
+            else:
+                normalized = CookieUpdateFetcher._normalize_domain(original_url)  # type: ignore[attr-defined]
+                if normalized and normalized not in cookie_status:
+                    print(
+                        f"  cookie-update: no cookies available for {normalized}, proceeding without them"
+                    )
+                    cookie_status[normalized] = False
+
+        strategy_cookies = domain_cookies
+        if strategy == "twitter":
+            strategy_cookies = merge_cookie_dicts(twitter_cookies, domain_cookies)
+
         try:
-            links = extract_links(original_url, strategy, twitter_cookies)
+            links = extract_links(original_url, strategy, strategy_cookies)
         except Exception as exc:
             print(f"  Error extracting links: {exc}")
             exit_code = 1
